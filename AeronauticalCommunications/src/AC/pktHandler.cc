@@ -21,38 +21,40 @@ using namespace std;
 
 Define_Module(PktHandler);
 
-void PktHandler::initialize()
+void PktHandler::initialize(int stage)
 {
-    // Total number of BSs, to compute distance_BS
-    int N_BS = getParentModule()->getParentModule()->par("N_BS").intValue();
-    int M = getParentModule()->getParentModule()->par("M").intValue();
+    if(stage == 24){
+        // Reference to ac mobility module
+        mobility = reinterpret_cast<LinearMobility*> ( getModuleByPath("^.mobility") );
 
-    double x, y, d;
+        // Total number of BSs, to compute distance_BS
+        int N_BS = par("N_BS").intValue();
 
-    // Compute distances of BSs
-    for (int i = 0; i < N_BS; i++) {
-        x = (i % 2) * M;
-        y = (i / 2) * M;
-        d = calculateDistance(x, y);
-        distance_BS.push_back(d);
+        // Get position of the BSs
+        cModule *net = getParentModule()->getParentModule();
+        for (int i = 0; i < N_BS; i++) {
+            cModule *BS_wrapper = net->getSubmodule("bs", i);
+            inet::StaticGridMobility* bs_mobility = reinterpret_cast<StaticGridMobility*> (BS_wrapper->getSubmodule("mobility"));
+            Coord bsPos = bs_mobility->getCurrentPosition();
+            BS_position.push_back(bsPos);
+        }
+
+        // Get new serving BS
+        handover();
+
+        // Init timers
+        communication_timer = new cMessage("communication_timer");
+        //handover_timer = new cMessage("handover_timer");
+
+        // Init pkt queue
+        pkt_queue = new cQueue();
+
+        // Register signals to compute statistics
+        waiting_time = registerSignal("waitingTime");
+        response_time = registerSignal("responseTime");
+        packets_in_queue = registerSignal("packetsInQueue");
+        service_time = registerSignal("serviceTime");
     }
-
-
-    // Get new serving BS
-    handover();
-
-    // Init timers
-    communication_timer = new cMessage("communication_timer");
-    //handover_timer = new cMessage("handover_timer");
-
-    // Init pkt queue
-    pkt_queue = new cQueue();
-
-    // Register signals to compute statistics
-    waiting_time = registerSignal("waitingTime");
-    response_time = registerSignal("responseTime");
-    packets_in_queue = registerSignal("packetsInQueue");
-    service_time = registerSignal("serviceTime");
 }
 
 
@@ -128,42 +130,19 @@ void PktHandler::finish()
     delete pkt_queue;
 }
 
-// To compute distance between grid origin and BS
-double PktHandler::calculateDistance(double x_BS, double y_BS) {
-    return std::sqrt(std::pow(x_BS, 2) + std::pow(y_BS, 2));
-}
-
-// To compute new distance between AC and serving BS
-void PktHandler::extractDistance()
-{
-    int N_BS = getParentModule()->getParentModule()->par("N_BS").intValue();
-    int M = getParentModule()->getParentModule()->par("M").intValue();
-
-
-    // position uniform or deterministic (DEBUG)
-    if (par("dRandom").boolValue()) {
-        distance_AC = uniform(par("dMin").doubleValue(), calculateDistance(M, (ceil(N_BS/2) * M)), D_RNG);
-    } else {
-        distance_AC = par("distance_AC").doubleValue();
-    }
-
-    EV << "pktHandler (extractDistance): distance_AC = " << distance_AC << endl ;
-}
-
 // Handover operation --> change serving BS
 void PktHandler::handover()
 {
     // Extract distance of AC
-    extractDistance();
+    Coord acPos = mobility->getCurrentPosition();
+
+    int N_BS = par("N_BS").intValue();
+    double T = par("T").doubleValue();
 
     double minDistance = std::numeric_limits<double>::max();  // init a max value
-    int N_BS = getParentModule()->getParentModule()->par("N_BS").intValue();
-    int T = getParentModule()->getParentModule()->par("T").intValue();
-
     // Compute distances
     for (int i = 0; i < N_BS; ++i) {
-        double distance = fabs(distance_AC - distance_BS[i]);
-        EV << "pktHandler (handover): distance BS_" << i << " = " << distance_BS[i] << endl;
+        double distance = BS_position[i].distance(acPos);
         EV << "pktHandler (handover): distance to BS_" << i << " = " << distance << endl;
         if (distance < minDistance) {
             minDistance = distance;

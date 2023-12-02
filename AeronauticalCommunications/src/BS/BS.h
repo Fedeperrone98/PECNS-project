@@ -31,7 +31,8 @@ class BS : public cSimpleModule
     inet::Coord bsPositions;
 
   protected:
-    virtual void initialize();
+    virtual void initialize(int stage);
+    virtual int numInitStages()const { return 25; }
     virtual void handleMessage(cMessage *msg);
     virtual void finish();
 };

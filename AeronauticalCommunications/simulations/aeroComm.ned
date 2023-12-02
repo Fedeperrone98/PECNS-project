@@ -15,8 +15,8 @@
 
 package aeronauticalcommunications.simulations;
 
-import inet.visualizer.integrated.IntegratedVisualizer;
-import inet.visualizer.scene.SceneVisualizer;
+import inet.visualizer.common.IntegratedVisualizer;
+import inet.visualizer.common.SceneVisualizer;
 
 import aeronauticalcommunications.AC.AC;
 import aeronauticalcommunications.BS.BS_wrapper;
@@ -30,7 +30,7 @@ network AeroComm
         int N_AC = default(1);
 
         int M = default(1);
-        int T = default(1);
+        double T = default(1);
 
         @display("bgb=351,330");
     submodules:

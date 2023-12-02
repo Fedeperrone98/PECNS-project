@@ -19,27 +19,27 @@
 #include <omnetpp.h>
 #include <vector>
 #include "inet/mobility/single/LinearMobility.h"
+#include "inet/mobility/static/StaticGridMobility.h"
 
 using namespace omnetpp;
 using namespace std;
-#define D_RNG     1
+using namespace inet;
 
 
 class PktHandler : public cSimpleModule
 {
   private:
 
-    std::vector<double> distance_BS;        // distances between grid origin and BSs
+    inet::LinearMobility* mobility;
+
+    std::vector<inet::Coord> BS_position;   // position of the BSs
+
     int id_closestBS;                       // id of the closest BS
-    double distance_AC;                     // distance between AC and grid origin
     double dist_AC_to_BS;                   // distance between AC and closest BS, to compute s_ac
     double s_AC;                            // service time for AC
-    cMessage* communication_timer;          // timer message with time s_ac to trigger send of communication packet
-    //cMessage* handover_timer;             // timer message with time (s_ac + s_bs) to trigger send of communication packet
-    cQueue* pkt_queue;                      // packet queue for communication and handover packets
 
-    //inet::LinearMobility* mobility;
-    //inet::Coord* bsPositions;
+    cMessage* communication_timer;          // timer message with time s_ac to trigger send of communication packet
+    cQueue* pkt_queue;                      // packet queue for communication and handover packets
 
     // Signals for statistics
     simsignal_t waiting_time;          // To compute waiting time in queue
@@ -48,11 +48,10 @@ class PktHandler : public cSimpleModule
     simsignal_t service_time;          // To compute mean service time of AC
 
   protected:
-    virtual void initialize();
+    virtual void initialize(int stage);
+    virtual int numInitStages()const { return 25; }
     virtual void handleMessage(cMessage *msg);
     virtual void finish();
-    void extractDistance();
-    double calculateDistance(double x, double y);
     void handover();
 };
 

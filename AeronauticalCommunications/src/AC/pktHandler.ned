@@ -21,15 +21,11 @@ package aeronauticalcommunications.AC;
 simple PktHandler
 {
     parameters:
-        
-        // distance random or deterministic?
-        bool dRandom = default(false);
-        double distance_AC = default(0);
+        int N_BS = default(4);
+        int N_AC = default(1);
 
-        // Boundaries for AC distance
-        // d Interval --> [0, sqrt((x_max)^2 + (y_max)^2)]
-        // x_max = M	y_max = ceil(N_BS/2) * M
-        double dMin = default(0);
+        int M = default(1);
+        double T = default(1);
         
         // Signals for statistics
         @signal[waitingTime] (type=double);

@@ -19,16 +19,17 @@ using namespace inet;
 
 Define_Module(BS);
 
-void BS::initialize()
+void BS::initialize(int stage)
 {
+    if(stage==23){
+        // Get reference to mobility module
+        mobility = reinterpret_cast<StaticGridMobility*> ( getModuleByPath("^.mobility") );
 
-    // Get reference to mobility module
-    mobility = reinterpret_cast<StaticGridMobility*> ( getModuleByPath("^.mobility") );
+        // set BS coordinate (x, y)
+        bsPositions = mobility->getCurrentPosition();
 
-    // set BS coordinate (x, y)
-    bsPositions = mobility->getCurrentPosition();
-
-    EV<< "BS[" << getIndex() << "]: (" << bsPositions.getX() << ", " << bsPositions.getY() << ")" << endl;
+        EV<< "BS[" << getParentModule()->getIndex() << "]: (" << bsPositions.getX() << ", " << bsPositions.getY() << ")" << endl;
+    }
 }
 
 void BS::handleMessage(cMessage *msg)
