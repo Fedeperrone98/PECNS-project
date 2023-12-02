@@ -14,6 +14,10 @@
 // 
 
 #include "pktHandler.h"
+#include <algorithm>
+
+using namespace inet;
+using namespace std;
 
 Define_Module(PktHandler);
 

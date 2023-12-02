@@ -15,8 +15,11 @@
 
 package aeronauticalcommunications.simulations;
 
+import inet.visualizer.integrated.IntegratedVisualizer;
+import inet.visualizer.scene.SceneVisualizer;
+
 import aeronauticalcommunications.AC.AC;
-import aeronauticalcommunications.BS.BS;
+import aeronauticalcommunications.BS.BS_wrapper;
 import aeronauticalcommunications.CT.CT;
 
 
@@ -31,13 +34,19 @@ network AeroComm
 
         @display("bgb=351,330");
     submodules:
+        visualizer: IntegratedVisualizer {
+            parameters:
+                @display("p=6200.248,3200.128");
+        }
         ac[N_AC]: AC {
-            @display("p=89,221");
+            @display("p=65,165");
         }
-        bs[N_BS]: BS {
-            @display("p=229,209");
+        bs[N_BS]: BS_wrapper {
+            @display("p=171,165");
         }
-        ct: CT;
+        ct: CT {
+            @display("p=258,165");
+        }
     connections:
         for i=0..N_BS-1 {
             bs[i].out --> ct.in++;

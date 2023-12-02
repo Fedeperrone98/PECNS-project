@@ -14,12 +14,13 @@
 // 
 
 package aeronauticalcommunications.AC;
+import inet.mobility.contract.IMobility;
 
 module AC
 {
     parameters:
         int N_BS = default(4);
-    @display("bgb=327,106");
+        @display("bgb=327,106");
     gates:
         output out[]; // to base stations
     submodules:
@@ -29,9 +30,12 @@ module AC
         pktHandler: PktHandler {
             @display("p=216,41");
         }
+        mobility: <> like IMobility {
+            @display("p=135.3,77.549995");
+        }
     connections:
         pktGenerator.out --> pktHandler.in;
-        for i=0..N_BS-1{
-        	pktHandler.out++ --> out[i];
-        }        
+        for i=0..N_BS-1 {
+            pktHandler.out++ --> out[i];
+        }
 }

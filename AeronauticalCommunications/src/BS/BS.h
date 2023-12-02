@@ -17,30 +17,18 @@
 #define __AERONAUTICALCOMMUNICATIONS_BS_H_
 
 #include <omnetpp.h>
+#include "inet/mobility/static/StaticGridMobility.h"
 
 using namespace omnetpp;
 
 class BS : public cSimpleModule
 {
   private:
+    // Reference to mobility module
+    inet::StaticGridMobility* mobility;
+
     // BS position (x, y)
-    double x;
-    double y;
-
-    // distance between BS and CT
-    double d_to_CT;
-
-    // BS service time (s_bs = T*d_to_CT^2)
-    double s_bs;
-
-    cMessage *timer;
-    cQueue *pkt_queue;
-
-    // signals
-    simsignal_t waiting_time;
-    simsignal_t response_time;
-    simsignal_t pkts_in_queue;
-    simsignal_t service_time;
+    inet::Coord bsPositions;
 
   protected:
     virtual void initialize();

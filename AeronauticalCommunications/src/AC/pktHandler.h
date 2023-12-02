@@ -18,14 +18,17 @@
 
 #include <omnetpp.h>
 #include <vector>
+#include "inet/mobility/single/LinearMobility.h"
 
 using namespace omnetpp;
+using namespace std;
 #define D_RNG     1
 
 
 class PktHandler : public cSimpleModule
 {
   private:
+
     std::vector<double> distance_BS;        // distances between grid origin and BSs
     int id_closestBS;                       // id of the closest BS
     double distance_AC;                     // distance between AC and grid origin
@@ -34,6 +37,9 @@ class PktHandler : public cSimpleModule
     cMessage* communication_timer;          // timer message with time s_ac to trigger send of communication packet
     //cMessage* handover_timer;             // timer message with time (s_ac + s_bs) to trigger send of communication packet
     cQueue* pkt_queue;                      // packet queue for communication and handover packets
+
+    //inet::LinearMobility* mobility;
+    //inet::Coord* bsPositions;
 
     // Signals for statistics
     simsignal_t waiting_time;          // To compute waiting time in queue

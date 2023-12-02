@@ -14,13 +14,27 @@
 // 
 
 package aeronauticalcommunications.BS;
+import inet.mobility.contract.IMobility;
 
-//
-// TODO auto-generated module
-//
-simple BS
+module BS_wrapper
 {
+    parameters:
+        int N_AC = default(1);
+
     gates:
         input in[];
         output out;
+    submodules:
+        bs: BS {
+            @display("p=295,77");
+        }
+        mobility: <> like IMobility {
+            @display("p=135.3,77.549995");
+        }
+    connections:
+        for i=0..N_AC-1 {
+            in[i] --> bs.in++;
+        }
+
+        bs.out --> out;
 }
