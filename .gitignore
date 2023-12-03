@@ -1,3 +1,4 @@
 /.metadata/
 inet4/*
 AeronauticalCommunications/simulations/results/*
+AeronauticalCommunications/simulations/*.anf
