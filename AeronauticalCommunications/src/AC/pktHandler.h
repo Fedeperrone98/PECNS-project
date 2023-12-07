@@ -45,6 +45,7 @@ class PktHandler : public cSimpleModule
     simsignal_t waiting_time;          // To compute waiting time in queue
     simsignal_t response_time;         // To compute response time of the packet
     simsignal_t packets_in_queue;      // To compute the number of packets in queue
+    simsignal_t distance_AC_BS;        // To compute distance between AC and BS
     simsignal_t service_time;          // To compute mean service time of AC
 
   protected:

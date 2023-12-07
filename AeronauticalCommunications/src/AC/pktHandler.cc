@@ -53,6 +53,7 @@ void PktHandler::initialize(int stage)
         waiting_time = registerSignal("waitingTime");
         response_time = registerSignal("responseTime");
         packets_in_queue = registerSignal("packetsInQueue");
+        distance_AC_BS = registerSignal("distance_AC_BS");
         service_time = registerSignal("serviceTime");
     }
 }
@@ -63,6 +64,7 @@ void PktHandler::handleMessage(cMessage *msg)
     // Message handler:
     // Communication or handover packet received
     if (msg->isName("communication_pkt") || msg->isName("handover_pkt")) {
+
        // Insert received packet into the pkt_queue
        pkt_queue->insert(msg);
 
@@ -75,14 +77,15 @@ void PktHandler::handleMessage(cMessage *msg)
            // Set timer after simTime + service time s_AC
            scheduleAt(simTime() + s_AC, communication_timer);
 
+           // Emit statistic: distance between AC and BS
+           emit(distance_AC_BS, dist_AC_to_BS);
            // Emit statistic: service time of AC
            emit(service_time, s_AC);
-
        }
 
        EV<< "pktHandler: s_AC = " << s_AC << endl;
-    }
 
+    }
     // Timer triggered
     else if (msg->isSelfMessage()) {
         // Pop packet from the queue
@@ -115,6 +118,8 @@ void PktHandler::handleMessage(cMessage *msg)
                 emit(packets_in_queue, (double) (pkt_queue->getLength() - 1));
             }
 
+            // Emit statistic: distance between AC and BS
+            emit(distance_AC_BS, dist_AC_to_BS);
             // Emit statistic: service time of AC
             emit(service_time, s_AC);
         }
@@ -152,7 +157,11 @@ void PktHandler::handover()
 
     // Update distance between AC and serving BS, and its service time s_AC
     dist_AC_to_BS = minDistance;
-    s_AC = T * pow(dist_AC_to_BS, 2);
+    if(par("validation").boolValue()){
+        s_AC = T * dist_AC_to_BS;
+    }else{
+        s_AC = T * pow(dist_AC_to_BS, 2);
+    }
 
     EV << "pktHandler (handover): dist_AC_to_BS = " << dist_AC_to_BS << endl;
     EV << "pktHandler (handover): id_closestBS = " << id_closestBS << endl;

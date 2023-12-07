@@ -27,6 +27,8 @@ simple PktHandler
         int M = default(1);
         double T = default(1);
         
+        bool validation = default(false);
+        
         // Signals for statistics
         @signal[waitingTime] (type=double);
         @statistic[acWaitingTimeStat](source="waitingTime"; record=mean,vector);
@@ -36,6 +38,9 @@ simple PktHandler
 
         @signal[packetsInQueue] (type=double);
         @statistic[acPacketsInQueue](source="packetsInQueue"; record=mean,vector);
+        
+        @signal[distance_AC_BS] (type=double);
+        @statistic[distance_AC_BS](source="distance_AC_BS"; record=max,min,mean,vector);
         
         @signal[serviceTime] (type=double);
         @statistic[acServiceTime](source="serviceTime"; record=mean,vector);
