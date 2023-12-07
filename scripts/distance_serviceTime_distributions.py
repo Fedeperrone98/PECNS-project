@@ -12,9 +12,9 @@ T = 0.000000001
 def fd(d):
     if d >= 0 and d <= M/2:
         return k*2*np.pi*d
-    elif d > M/2 and d <= M/(2**(1/2)):
+    #elif d > M/2 and d <= M/(2**(1/2)):
         #return k*(2*np.pi*d - 8*d*np.arccos(M/(2*(2**(1/2))*d)))
-        return k*4*d*(np.pi/2 - 2*np.arccos(M/2/d))
+        #return k*4*d*(np.pi/2 - 2*np.arccos(M/2/d))
     else:
         return 0
 
@@ -60,20 +60,20 @@ plt.savefig(fname="plots/plot_distance_distribution")
 plt.figure()
 
 def fs(s):
-    #if s >= 0 and s <= (T * M ) / 2:
-    if s >= 0 and s <= (T * M**2 ) / 4:
-        #return 2*np.pi*s / ( T **2 )
-        return np.pi / ( T * M**2 )
+    if s >= 0 and s <= (T * M ) / 2:
+    #if s >= 0 and s <= (T * M**2 ) / 4:
+        return 2*np.pi*s / ( T **2 )
+        #return np.pi / ( T * M**2 )
     #elif s > (T * M ) / 2 and s <= (T * M * (2**0.5) ) / 2:
-    elif s >= (T * M**2 ) / 4 and s <= (T * M**2) / 2:
+    #elif s >= (T * M**2 ) / 4 and s <= (T * M**2) / 2:
         #return (2*np.pi*s / (T**2)) - (8 * s/ (T **2)) * np.arccos((M*T*(2**0.5))/(2*s))
-        return (np.pi / (T * M**2)) - (4 / (T * M**2)) * np.arccos(M/2 * ((T / s)**0.5))
+        #return (np.pi / (T * M**2)) - (4 / (T * M**2)) * np.arccos(M/2 * ((T / s)**0.5))
     else:
         return 0
 
 ### Distribution of Service Time
-#s = T * d
-s = T * d ** 2
+s = T * d
+#s = T * d ** 2
 f = []
 for i in s:
     f.append(fs(i))
