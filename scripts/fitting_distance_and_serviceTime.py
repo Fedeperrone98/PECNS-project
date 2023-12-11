@@ -4,55 +4,20 @@ import matplotlib.pyplot as plt
 import math
 from scipy.stats import uniform as unif
 from scipy.stats import linregress as regr
-#import seaborn as sns
 import matplotlib
 matplotlib.rcParams['font.family'] = "serif"
 plt.style.use('ggplot')
 
 M = 25000
-T = 0.00000000425603
+k = 1.6*10**(-9)
+T = 1*10**(-9)
 nameOrder = ['interarrival', 'serviceTime',
              'queueLength', 'responseTime', 'waitingTime']
-
-'''
-    Load and rename columnn using nameOrder list.
-    CSV File must containt data with the following order:
-    time, interarrival, time, serviceTime, time, queueLength, time, responseTime, time, waitingTime 
-    repeated {repetition} times 
-
-    columns of time are deleted
-'''
-
-
-def loadData(path, repetition):
-    df = pd.read_csv(path + '.csv')
-    names = []
-    for i in range(repetition):
-        for j in range(len(nameOrder)):
-            names.append('time')
-            names.append(nameOrder[j] + str(i))
-
-    df.columns = names
-    df = df.drop(columns='time')
-    df = df[:math.floor(len(df)*0.7)]
-    return df
-
-
-'''
-    Find every column of dataframe that starts with "stat"
-'''
-
-
-def splitStat(df, stat):
-    statDf = df[df.columns[pd.Series(df.columns).str.startswith(stat)]]
-    return statDf
 
 
 '''
     Sort every column of dataframe and perform a mean per row
 '''
-
-
 def meanPerRow(df, stat):
     orderedStat = df.apply(lambda x: x.sort_values().values)
     orderedStat = orderedStat.apply(lambda x: x.dropna())
@@ -71,16 +36,13 @@ def histogram(df, nbin, path, name, k):
 '''
     Service Time Cumulative Distribution Function F(s)
 '''
-
-
 def serviceTimeCDF(s):
     if s < 0:
         Fs = 0
-    elif s <= T*M**2/4:
-        Fs = math.pi * s/(T*M**2)
-    elif s <= T*M**2/2:
-        Fs = math.pi * s/(T*M**2) - 4*s/(T*M**2)*math.acos(M /
-                                                           2*math.sqrt(T/s)) + math.sqrt(4*s/(T*M**2)-1)
+    elif s >=0 and s <= (T*M*math.sqrt(2))/2:
+        Fs = ((k * math.pi * (s**2)) /(T**2))
+    #elif s >= T*M/2 and s <= T*M/2**0.5:
+        #Fs = k * (M/T * (4*s**2-M**2*T**2)**0.5 + (math.pi*s**2)/(T**2)- ((4*s**2)/(T**2)* math.acos((M*T)/(2*s))) - (math.pi*M**2)/(4))
     else:
         Fs = 1.0
     return Fs
@@ -89,16 +51,14 @@ def serviceTimeCDF(s):
 '''
     Distance Cumulative Distribution Function F(d)
 '''
-
-
 def distanceCDF(d):
     if d < 0:
         Fd = 0
-    elif d <= M/2:
-        Fd = math.pi*d**2/M**2
-    elif d <= M/2*math.sqrt(2):
-        Fd = math.pi*d**2/M**2 - 4/M**2*d**2 * \
-            math.acos(M/(2*d)) + d/M*math.sqrt((4*d**2-M**2)/d**2)
+    #elif d>=0 and d <= M/2:
+    elif d>=0 and d <= (M*math.sqrt(2))/2:
+        Fd = math.pi*d**2 * k
+    #elif d>M/2 and d <= (M*math.sqrt(d))/2:
+        #Fd = k * ( (M * math.sqrt((4*(d**2))-(M**2)))  + (math.pi * (d**2)) - ((4*(d**2))*math.acos(M/(2*d))) - (math.pi*(M**2))/(4) )
     else:
         Fd = 1.0
     return Fd
@@ -107,19 +67,17 @@ def distanceCDF(d):
 '''
     look for x such that F(x) = P{X < x} = quantile, with an error of maxError
 '''
-
-
 def findQuantile(quantile, name, maxError):
     x = 0.0
     if name == 'serviceTime':
         error = quantile - serviceTimeCDF(x)
         while error > maxError:
-            x += 0.1*error
+            x += (10**(-5))*error
             error = quantile - serviceTimeCDF(x)
     elif name == 'distance':
         error = quantile - distanceCDF(x)
         while error > maxError:
-            x += 0.3*error
+            x += 0.1*error
             error = quantile - distanceCDF(x)
     return x
 
@@ -127,8 +85,6 @@ def findQuantile(quantile, name, maxError):
 '''
      find every quantile for both theoretical and sample distribution
 '''
-
-
 def fitDistribution(df, name, maxError):
     theoreticalQ = []
     sampleQ = []
@@ -145,8 +101,6 @@ def fitDistribution(df, name, maxError):
 '''
      draw a qq plot
 '''
-
-
 def qqPlot(theoreticalQ, sampleQ, name):
     slope, intercept, r_value, p_value, std_err = regr(theoreticalQ, sampleQ)
 
@@ -173,29 +127,33 @@ def main():
     '''
         Service Time fitting
     '''
-    # data = loadData('K2s', 30)
-    # serviceTime30Rep = splitStat(data, 'serviceTime')
-    # serviceTime = meanPerRow(serviceTime30Rep, 'serviceTime')
+    serviceTime10Rep = pd.read_csv('csv/service_time.csv')
+    names = []
+    for i in range(10):
+        names.append('time')
+        names.append('serviceTime' + str(i))
+    serviceTime10Rep.columns = names
+    serviceTime10Rep = serviceTime10Rep.drop(columns='time')
+    serviceTime = meanPerRow(serviceTime10Rep, 'serviceTime')
+    serviceTime = serviceTime.sample(n=1000)
 
-    # serviceTime = serviceTime.sample(n=1000)
+    theoreticalQ, sampleQ = fitDistribution(serviceTime, 'serviceTime', 0.0001)
+    qqPlot(theoreticalQ, sampleQ, 'serviceTime' )
 
-    # theoreticalQ, sampleQ = fitDistribution(serviceTime, 'serviceTime', 0.0001)
-    # qqPlot(theoreticalQ, sampleQ, 'serviceTime' )
-
-    # plt.savefig(fname="plots/distance_qq_plot")
+    plt.savefig(fname="plots/serviceTime_qq_plot")
 
     '''
         Distance Time fitting
     # '''
-    distance30Rep = pd.read_csv('distance.csv')
+    distance10Rep = pd.read_csv('csv/distance.csv')
     names = []
-    for i in range(30):
+    for i in range(10):
         names.append('time')
         names.append('distance' + str(i))
 
-    distance30Rep.columns = names
-    distance30Rep = distance30Rep.drop(columns='time')
-    distance = meanPerRow(distance30Rep, 'distance')
+    distance10Rep.columns = names
+    distance10Rep = distance10Rep.drop(columns='time')
+    distance = meanPerRow(distance10Rep, 'distance')
     distance = distance.sample(n=1000)
 
     theoreticalQ, sampleQ = fitDistribution(distance, 'distance', 0.0001)
