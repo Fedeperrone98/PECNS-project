@@ -61,67 +61,76 @@ void PktHandler::initialize(int stage)
 
 void PktHandler::handleMessage(cMessage *msg)
 {
-    // Message handler:
-    // Communication or handover packet received
-    if (msg->isName("communication_pkt") || msg->isName("handover_pkt")) {
+    // Update distance and service time of AC
+    updateDistance_and_ServiceTime();
+    int M = par("M").intValue();
 
-       // Insert received packet into the pkt_queue
-       pkt_queue->insert(msg);
+    // In validation, we discard every message outside the range of the serving BS
+    if (par("validation").boolValue() &&  (dist_AC_to_BS >= M/2) && !msg->isSelfMessage()) {
+        delete(msg);
+    } else {
+        // Message handler:
+        // Communication or handover packet received
+        if (msg->isName("communication_pkt") || msg->isName("handover_pkt")) {
 
-       // Emit statistic: number of packets in queue --> Work Conserving
-       // (is "-1" because the first packet in queue is in service)
-       emit(packets_in_queue, (double) (pkt_queue->getLength() - 1));
+           // Insert received packet into the pkt_queue
+           pkt_queue->insert(msg);
 
-       // if it is the first packet in queue
-       if(pkt_queue->getLength() == 1){
-           // Set timer after simTime + service time s_AC
-           scheduleAt(simTime() + s_AC, communication_timer);
+           // Emit statistic: number of packets in queue --> Work Conserving
+           // (is "-1" because the first packet in queue is in service)
+           emit(packets_in_queue, (double) (pkt_queue->getLength() - 1));
 
-           // Emit statistic: distance between AC and BS
-           emit(distance_AC_BS, dist_AC_to_BS);
-           // Emit statistic: service time of AC
-           emit(service_time, s_AC);
-       }
+           // if it is the first packet in queue
+           if(pkt_queue->getLength() == 1){
+               // Set timer after simTime + service time s_AC
+               scheduleAt(simTime() + s_AC, communication_timer);
 
-       EV<< "pktHandler: s_AC = " << s_AC << endl;
+               // Emit statistic: distance between AC and BS
+               emit(distance_AC_BS, dist_AC_to_BS);
+               // Emit statistic: service time of AC
+               emit(service_time, s_AC);
+           }
 
-    }
-    // Timer triggered
-    else if (msg->isSelfMessage()) {
-        // Pop packet from the queue
-        cMessage *pkt = check_and_cast<cMessage*>(pkt_queue->pop());
+           EV<< "pktHandler: s_AC = " << s_AC << endl;
 
-        // Emit statistics: waiting time and response time
-        simtime_t arrivalTime = pkt->getArrivalTime();
-        emit(waiting_time, (simTime() - arrivalTime - s_AC).dbl());
-        emit(response_time, (simTime() - arrivalTime).dbl());
-
-        // Check packet type:
-        // Communication packet --> forward through output gate
-        if (pkt->isName("communication_pkt")) {
-            send(pkt, "out", id_closestBS);
         }
-        // Handover packet --> change serving BS
-        else {
-            handover();
-            delete(pkt);
-        }
+        // Timer triggered
+        else if (msg->isSelfMessage()) {
+            // Pop packet from the queue
+            cMessage *pkt = check_and_cast<cMessage*>(pkt_queue->pop());
 
-        // Serve the next packet
-        if(!pkt_queue->isEmpty()) {
-            // Set timer after simTime + service time s_AC
-            scheduleAt(simTime() + s_AC, communication_timer);
+            // Emit statistics: waiting time and response time
+            simtime_t arrivalTime = pkt->getArrivalTime();
+            emit(waiting_time, (simTime() - arrivalTime - s_AC).dbl());
+            emit(response_time, (simTime() - arrivalTime).dbl());
 
-            // Emit statistic: number of packets in queue --> Work Conserving
-            // (is "-1" because the first packet in queue is in service)
-            if (pkt_queue->getLength() > 1) {
-                emit(packets_in_queue, (double) (pkt_queue->getLength() - 1));
+            // Check packet type:
+            // Communication packet --> forward through output gate
+            if (pkt->isName("communication_pkt")) {
+                send(pkt, "out", id_closestBS);
+            }
+            // Handover packet --> change serving BS
+            else {
+                handover();
+                delete(pkt);
             }
 
-            // Emit statistic: distance between AC and BS
-            emit(distance_AC_BS, dist_AC_to_BS);
-            // Emit statistic: service time of AC
-            emit(service_time, s_AC);
+            // Serve the next packet
+            if(!pkt_queue->isEmpty()) {
+                // Set timer after simTime + service time s_AC
+                scheduleAt(simTime() + s_AC, communication_timer);
+
+                // Emit statistic: number of packets in queue --> Work Conserving
+                // (is "-1" because the first packet in queue is in service)
+                if (pkt_queue->getLength() > 1) {
+                    emit(packets_in_queue, (double) (pkt_queue->getLength() - 1));
+                }
+
+                // Emit statistic: distance between AC and BS
+                emit(distance_AC_BS, dist_AC_to_BS);
+                // Emit statistic: service time of AC
+                emit(service_time, s_AC);
+            }
         }
     }
 }
@@ -138,7 +147,7 @@ void PktHandler::finish()
 // Handover operation --> change serving BS
 void PktHandler::handover()
 {
-    // Extract distance of AC
+    // Extract position of AC
     Coord acPos = mobility->getCurrentPosition();
 
     int N_BS = par("N_BS").intValue();
@@ -166,4 +175,23 @@ void PktHandler::handover()
     EV << "pktHandler (handover): dist_AC_to_BS = " << dist_AC_to_BS << endl;
     EV << "pktHandler (handover): id_closestBS = " << id_closestBS << endl;
 
+}
+
+// Update distance and service time from serving BS
+void PktHandler::updateDistance_and_ServiceTime() {
+
+    // Extract position of AC
+    Coord acPos = mobility->getCurrentPosition();
+
+    // Update distance from serving BS
+    dist_AC_to_BS = BS_position[id_closestBS].distance(acPos);
+
+    double T = par("T").doubleValue();
+
+    // Update service time from serving BS
+    if(par("validation").boolValue()){
+        s_AC = T * dist_AC_to_BS;
+    }else{
+        s_AC = T * pow(dist_AC_to_BS, 2);
+    }
 }

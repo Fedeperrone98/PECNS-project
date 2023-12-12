@@ -54,6 +54,7 @@ class PktHandler : public cSimpleModule
     virtual void handleMessage(cMessage *msg);
     virtual void finish();
     void handover();
+    void updateDistance_and_ServiceTime();
 };
 
 #endif
