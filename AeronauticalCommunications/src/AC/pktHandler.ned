@@ -37,7 +37,9 @@ simple PktHandler
         @statistic[acResponseTimeStat](source="responseTime"; record=mean,vector);
 
         @signal[packetsInQueue] (type=double);
-        @statistic[acPacketsInQueue](source="packetsInQueue"; record=mean,vector);
+        @statistic[acPacketsInQueue](source="packetsInQueue"; record=vector);
+        @signal[arrivalTime] (type=double);
+        @statistic[acArrivalTime](source="arrivalTime"; record=vector);
         
         @signal[distance_AC_BS] (type=double);
         @statistic[distance_AC_BS](source="distance_AC_BS"; record=max,min,mean,vector);

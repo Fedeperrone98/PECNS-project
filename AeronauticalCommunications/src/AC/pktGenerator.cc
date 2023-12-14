@@ -54,14 +54,14 @@ void PktGenerator::initialize()
 void PktGenerator::handleMessage(cMessage *msg)
 {
 
-    cMessage* pkt;
+    AC_packet* pkt;
 
     // Check timer triggered
 
     // Timer k triggered --> generate communication packet
     if (strcmp(msg->getName(), "timer_k") == 0) {
         // Send communication packet
-        pkt = new cMessage("communication_pkt");
+        pkt = new AC_packet("communication_pkt");
         send(pkt, "out");
 
         // Schedule a new timer for communication packet
@@ -82,7 +82,7 @@ void PktGenerator::handleMessage(cMessage *msg)
     // Timer t triggered --> generate handover packet
     else {
         // Send handover packet
-        pkt = new cMessage("handover_pkt");
+        pkt = new AC_packet("handover_pkt");
         send(pkt, "out");
 
         // Schedule a new timer for handover packet

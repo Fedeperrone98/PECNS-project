@@ -13,27 +13,9 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#ifndef __AERONAUTICALCOMMUNICATIONS_PKTGENERATOR_H_
-#define __AERONAUTICALCOMMUNICATIONS_PKTGENERATOR_H_
-
-#include <omnetpp.h>
-#include "AC_packet_m.h"
-
-using namespace omnetpp;
-#define TIME_RNG     0
-
-
-class PktGenerator : public cSimpleModule
-{
-  private:
-    cMessage* timer_k; // Timer message with time k to trigger communication packet
-    cMessage* timer_t; // Timer message with time t to trigger handover packet
-
-  protected:
-    virtual void initialize();
-    virtual void handleMessage(cMessage *msg);
-    virtual double computeInterval_k();
-    virtual void finish();
-};
-
-#endif
+//
+// TODO generated message class
+//
+message AC_packet {
+    simtime_t s_ac; 
+}

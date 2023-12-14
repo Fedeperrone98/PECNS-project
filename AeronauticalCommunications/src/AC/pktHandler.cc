@@ -14,7 +14,6 @@
 // 
 
 #include "pktHandler.h"
-#include <algorithm>
 
 using namespace inet;
 using namespace std;
@@ -53,6 +52,7 @@ void PktHandler::initialize(int stage)
         waiting_time = registerSignal("waitingTime");
         response_time = registerSignal("responseTime");
         packets_in_queue = registerSignal("packetsInQueue");
+        arrival_time = registerSignal("arrivalTime");
         distance_AC_BS = registerSignal("distance_AC_BS");
         service_time = registerSignal("serviceTime");
     }
@@ -74,14 +74,18 @@ void PktHandler::handleMessage(cMessage *msg)
         if (msg->isName("communication_pkt") || msg->isName("handover_pkt")) {
 
            // Insert received packet into the pkt_queue
-           pkt_queue->insert(msg);
+           pkt_queue->insert(check_and_cast<AC_packet*>(msg));
 
            // Emit statistic: number of packets in queue --> Work Conserving
            // (is "-1" because the first packet in queue is in service)
            emit(packets_in_queue, (double) (pkt_queue->getLength() - 1));
+           emit(arrival_time, simTime().dbl());
 
            // if it is the first packet in queue
            if(pkt_queue->getLength() == 1){
+               AC_packet *next_pkt = check_and_cast<AC_packet*>(pkt_queue->front());
+               next_pkt -> setS_ac(s_AC);
+
                // Set timer after simTime + service time s_AC
                scheduleAt(simTime() + s_AC, communication_timer);
 
@@ -97,11 +101,12 @@ void PktHandler::handleMessage(cMessage *msg)
         // Timer triggered
         else if (msg->isSelfMessage()) {
             // Pop packet from the queue
-            cMessage *pkt = check_and_cast<cMessage*>(pkt_queue->pop());
+            AC_packet *pkt = check_and_cast<AC_packet*>(pkt_queue->pop());
 
             // Emit statistics: waiting time and response time
             simtime_t arrivalTime = pkt->getArrivalTime();
-            emit(waiting_time, (simTime() - arrivalTime - s_AC).dbl());
+            simtime_t pkt_service_time = pkt->getS_ac();
+            emit(waiting_time, (simTime() - arrivalTime - pkt_service_time).dbl());
             emit(response_time, (simTime() - arrivalTime).dbl());
 
             // Check packet type:
@@ -117,6 +122,9 @@ void PktHandler::handleMessage(cMessage *msg)
 
             // Serve the next packet
             if(!pkt_queue->isEmpty()) {
+                AC_packet *next_pkt = check_and_cast<AC_packet*>(pkt_queue->front());
+                next_pkt -> setS_ac(s_AC);
+
                 // Set timer after simTime + service time s_AC
                 scheduleAt(simTime() + s_AC, communication_timer);
 
@@ -124,6 +132,7 @@ void PktHandler::handleMessage(cMessage *msg)
                 // (is "-1" because the first packet in queue is in service)
                 if (pkt_queue->getLength() > 1) {
                     emit(packets_in_queue, (double) (pkt_queue->getLength() - 1));
+                    emit(arrival_time, simTime().dbl());
                 }
 
                 // Emit statistic: distance between AC and BS
