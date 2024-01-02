@@ -32,18 +32,6 @@ void PktGenerator::initialize()
     }
     simtime_t interval_t = par("t").doubleValue();
 
-    /*
-    // Get distribution for k
-    int k_distribution = par("kDistribution").intValue();
-
-    // Compute k
-    if (k_distribution == 1) {
-        interval_k = uniform(par("kMin").doubleValue(), par("kMax").doubleValue(), TIME_RNG);
-    } else {
-        interval_k = exponential(par("kMean").doubleValue(), TIME_RNG);
-    }
-    */
-
     // Schedule timers
     scheduleAt(simTime() + interval_k, timer_k);
     scheduleAt(simTime() + interval_t, timer_t);
