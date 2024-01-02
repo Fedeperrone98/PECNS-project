@@ -32,18 +32,6 @@ void PktGenerator::initialize()
     }
     simtime_t interval_t = par("t").doubleValue();
 
-    /*
-    // Get distribution for k
-    int k_distribution = par("kDistribution").intValue();
-
-    // Compute k
-    if (k_distribution == 1) {
-        interval_k = uniform(par("kMin").doubleValue(), par("kMax").doubleValue(), TIME_RNG);
-    } else {
-        interval_k = exponential(par("kMean").doubleValue(), TIME_RNG);
-    }
-    */
-
     // Schedule timers
     scheduleAt(simTime() + interval_k, timer_k);
     scheduleAt(simTime() + interval_t, timer_t);
@@ -54,14 +42,14 @@ void PktGenerator::initialize()
 void PktGenerator::handleMessage(cMessage *msg)
 {
 
-    cMessage* pkt;
+    AC_packet* pkt;
 
     // Check timer triggered
 
     // Timer k triggered --> generate communication packet
     if (strcmp(msg->getName(), "timer_k") == 0) {
         // Send communication packet
-        pkt = new cMessage("communication_pkt");
+        pkt = new AC_packet("communication_pkt");
         send(pkt, "out");
 
         // Schedule a new timer for communication packet
@@ -82,7 +70,7 @@ void PktGenerator::handleMessage(cMessage *msg)
     // Timer t triggered --> generate handover packet
     else {
         // Send handover packet
-        pkt = new cMessage("handover_pkt");
+        pkt = new AC_packet("handover_pkt");
         send(pkt, "out");
 
         // Schedule a new timer for handover packet

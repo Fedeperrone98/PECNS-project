@@ -20,9 +20,6 @@
 
 using namespace omnetpp;
 
-/**
- * TODO - Generated class
- */
 class CT : public cSimpleModule
 {
   private:

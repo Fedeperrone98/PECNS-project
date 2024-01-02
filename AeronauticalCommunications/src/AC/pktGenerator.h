@@ -17,6 +17,7 @@
 #define __AERONAUTICALCOMMUNICATIONS_PKTGENERATOR_H_
 
 #include <omnetpp.h>
+#include "AC_packet_m.h"
 
 using namespace omnetpp;
 #define TIME_RNG     0
